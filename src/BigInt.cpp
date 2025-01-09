@@ -165,6 +165,33 @@ BigInt BigInt::operator-(const BigInt &other) const
 
 BigInt BigInt::operator*(const BigInt &other) const
 {
+    int maxSize = other.size + this->size;
+    int *results = new int[maxSize]();
+
+    for (int d = 0; d < maxSize; d++)
+    {
+        for (int t = 0; t <= d; t++)
+        {
+            int o = d - t;
+            if (o < other.size && t < this->size)
+            {
+                results[d] += this->digits[t] * other.digits[o];
+                if (results[d] > 1000000000)
+                {
+                    results[d + 1] += results[d] / 1000;
+                    results[d] %= 1000;
+                }
+            }
+        }
+        if (results[d] > 999)
+        {
+            results[d + 1] += results[d] / 1000;
+            results[d] %= 1000;
+        }
+    }
+
+    BigInt result = BigInt(results, maxSize - (results[maxSize - 1] == 0), this->isNegative ^ other.isNegative);
+    return result;
 }
 
 BigInt BigInt::operator-() const
