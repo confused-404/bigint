@@ -12,4 +12,8 @@ int main() {
     std::cout << "a - b = " << (a - b).toString() << std::endl;
     std::cout << "b - a = " << (b - a).toString() << std::endl;
     std::cout << "a * b = " << (a * b).toString() << std::endl;
+    std::cout << "a / b = " << (a / b).toString() << std::endl;
+    std::cout << "b / a = " << (b / a).toString() << std::endl;
+    std::cout << "a % b = " << (a % b).toString() << std::endl;
+    std::cout << "b % a = " << (b % a).toString() << std::endl;
 }

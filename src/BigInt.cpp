@@ -47,6 +47,12 @@ BigInt::BigInt(const BigInt &other)
     std::copy(other.digits, other.digits + this->size, this->digits);
 }
 
+BigInt::BigInt(int size) {
+    this->size = size;
+    this->isNegative = 0;
+    this->digits = new int[size];
+}
+
 BigInt::~BigInt()
 {
     delete[] this->digits;
@@ -194,6 +200,15 @@ BigInt BigInt::operator*(const BigInt &other) const
     return result;
 }
 
+BigInt BigInt::operator/(const BigInt &other) const
+{
+    return this->alldivision(other).first;
+}
+
+BigInt BigInt::operator%(const BigInt& other) const {
+    return this->alldivision(other).second;
+}
+
 BigInt BigInt::operator-() const
 {
     BigInt copy = this->copy();
@@ -294,4 +309,31 @@ std::string BigInt::toString() const
         fin.append(std::to_string(this->digits[this->size - d]));
     }
     return fin;
+}
+
+std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt &other) const
+{
+    if (*this < other) return std::make_pair(BigInt("0"), *this);
+    if (other == BigInt("0")) throw std::runtime_error("Division by 0");
+    if (other == BigInt("1")) return std::make_pair(*this, BigInt("0"));
+
+    BigInt remainder = *this;
+    BigInt quotient(this->size);
+    quotient.digits = new int[this->size]();
+
+    for (int i = this->size - 1; i >= other.size - 1; i--) {
+        int sigdividend = remainder.digits[i];
+        if (i + 1 < remainder.size) {
+            sigdividend += remainder.digits[i + 1] * 1000;
+        }
+
+        int sigdivisor = other.digits[other.size - 1];
+        int result = sigdividend / sigdivisor;
+
+        remainder = remainder - (other * result) * (i - (other.size - 1));
+        
+        quotient.digits[i - (other.size - 1)] = result;
+    }
+
+    return std::make_pair(quotient, remainder);
 }
