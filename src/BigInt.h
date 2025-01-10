@@ -13,6 +13,7 @@ private:
     bool isNegative;
 
     std::pair<BigInt, BigInt> alldivision(const BigInt& other) const;
+    BigInt shiftLeft(int places) const;
 public:
     BigInt(std::string og);
     BigInt(int* digits, int size, bool isNegative);

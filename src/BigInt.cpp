@@ -50,7 +50,7 @@ BigInt::BigInt(const BigInt &other)
 BigInt::BigInt(int size) {
     this->size = size;
     this->isNegative = 0;
-    this->digits = new int[size];
+    this->digits = new int[size]();
 }
 
 BigInt::~BigInt()
@@ -330,10 +330,22 @@ std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt &other) const
         int sigdivisor = other.digits[other.size - 1];
         int result = sigdividend / sigdivisor;
 
-        remainder = remainder - (other * result) * (i - (other.size - 1));
+        remainder = remainder - (other * result).shiftLeft(i - (other.size - 1));
         
         quotient.digits[i - (other.size - 1)] = result;
     }
 
     return std::make_pair(quotient, remainder);
+}
+
+BigInt BigInt::shiftLeft(int places) const {
+    BigInt result(*this);
+    result.size += places;
+    int *newDigits = new int[result.size]();
+    for (int i = 0; i < size; i++) {
+        newDigits[i + places] = digits[i];
+    }
+    delete[] result.digits;
+    result.digits = newDigits;
+    return result;
 }
