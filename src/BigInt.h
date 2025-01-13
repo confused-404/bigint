@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include <utility>
+#include <cmath>
 
 class BigInt {
 private:
@@ -14,11 +15,13 @@ private:
 
     std::pair<BigInt, BigInt> alldivision(const BigInt& other) const;
     BigInt shiftLeft(int places) const;
+    void removeLeadingZeroes();
 public:
     BigInt(std::string og);
     BigInt(int* digits, int size, bool isNegative);
     BigInt(const BigInt &other);
     BigInt(int size);
+    BigInt(int value, bool isNegative);
     
     ~BigInt();
 
@@ -30,6 +33,7 @@ public:
     BigInt operator*(const BigInt& other) const;
     BigInt operator/(const BigInt& other) const;
     BigInt operator%(const BigInt& other) const;
+    BigInt pow(const BigInt& other) const;
 
     BigInt operator-() const;
 
@@ -43,6 +47,7 @@ public:
     BigInt& operator=(const BigInt &other);
 
     std::string toString() const;
+    int toInt() const;
 };
 
 #endif
