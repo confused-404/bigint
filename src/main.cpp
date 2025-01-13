@@ -2,10 +2,10 @@
 
 int main()
 {
-    BigInt a = BigInt("54263723901");
+    BigInt a = BigInt("24");
     // BigInt a = BigInt("23");
     // // std::cout << "a.toString(): " << a.toString() << std::endl;
-    BigInt b = BigInt("78964371896");
+    BigInt b = BigInt("100000");
     // BigInt b = BigInt("47");
     // // std::cout << "b.toString(): " << b.toString() << std::endl;
 

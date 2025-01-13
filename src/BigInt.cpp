@@ -203,6 +203,10 @@ BigInt BigInt::operator*(const BigInt &other) const
 {
     int maxSize = other.size + this->size;
     int *results = new int[maxSize]();
+    if (results == nullptr)
+    {
+        throw std::runtime_error("Memory allocation failed in operator*");
+    }
 
     for (int d = 0; d < maxSize; d++)
     {
@@ -212,7 +216,7 @@ BigInt BigInt::operator*(const BigInt &other) const
             if (o < other.size && t < this->size)
             {
                 results[d] += this->digits[t] * other.digits[o];
-                if (results[d] > 1000000000)
+                if (results[d] > 1000)
                 {
                     results[d + 1] += results[d] / 1000;
                     results[d] %= 1000;
@@ -243,39 +247,26 @@ BigInt BigInt::operator%(const BigInt &other) const
 
 BigInt BigInt::pow(const BigInt &other) const
 {
-    // std::cout << "pow called with a = " << this->toString() << ", and b = " << other.toString() << std::endl;
-
     if (other == BigInt("0"))
         return BigInt("1");
     if (*this == BigInt("0"))
         return BigInt("0");
     if (other < BigInt("0"))
-        throw std::invalid_argument("Negative exponents not supported");
+        return BigInt("0");
 
     BigInt result("1");
-    BigInt binarypig(other);
-    BigInt accumulator(*this);
+    BigInt base = *this;
+    BigInt exp = other;
 
-    while (binarypig > BigInt("0"))
+    while (exp > BigInt("0"))
     {
-        // std::cout << "result: " << result.toString() << std::endl;
-
-        if (binarypig.digits[0] % 2 == 1)
+        if (exp.digits[0] % 2 == 1)
         {
-            result = result * accumulator;
-            // std::cout << "Updated result: " << result.toString() << std::endl;
+            result = result * base;
         }
-
-        accumulator = accumulator * accumulator;
-        // std::cout << "Squared accumulator: " << accumulator.toString() << std::endl;
-
-        // std::cout << "binarypig before division: " << binarypig.toString() << std::endl;
-        // if (binarypig == BigInt("1")) std::cout << "binaryipg is 1" << std::endl;
-        binarypig = binarypig / BigInt("2");
-        // std::cout << "Reduced binarypig: " << binarypig.toString() << std::endl;
+        base = base * base;
+        exp = exp / BigInt("2");
     }
-
-    // std::cout << "result: " << result.toString() << std::endl;
     return result;
 }
 
@@ -514,12 +505,19 @@ int BigInt::toInt() const
     return this->isNegative ? -result : result;
 }
 
-void BigInt::removeLeadingZeroes() {
-    int newsize = this->size;
-    for (int d = 0; d < this->size; d++) {
-        if (this->digits[this->size - 1 - d] == 0) {
-            newsize--;
-        }
+void BigInt::removeLeadingZeroes()
+{
+    int newSize = this->size;
+    while (newSize > 0 && this->digits[newSize - 1] == 0)
+    {
+        newSize--;
     }
-    this->size = newsize;
+    if (newSize != this->size)
+    {
+        int *newDigits = new int[newSize]();
+        std::copy(this->digits, this->digits + newSize, newDigits);
+        delete[] this->digits;
+        this->digits = newDigits;
+        this->size = newSize;
+    }
 }
