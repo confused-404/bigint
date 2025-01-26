@@ -49,6 +49,8 @@ public:
 
     BigInt& operator=(const BigInt &other);
 
+    static BigInt gcd(const BigInt& a, const BigInt& b);
+    static BigInt lcm(const BigInt& a, const BigInt& b);
     bool isPrime() const;
 
     std::string toString() const;

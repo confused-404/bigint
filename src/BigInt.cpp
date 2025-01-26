@@ -484,21 +484,40 @@ BigInt &BigInt::operator=(const BigInt &other)
     return *this;
 }
 
-bool BigInt::isPrime() const {
-    if (*this < BigInt(2)) return false;
+BigInt BigInt::gcd(const BigInt &a, const BigInt &b)
+{
+    if (b == BigInt("0"))
+        return a;
+    return BigInt::gcd(b, a % b);
+}
+
+BigInt BigInt::lcm(const BigInt &a, const BigInt &b)
+{
+    return a * b / BigInt::gcd(a, b);
+}
+
+bool BigInt::isPrime() const
+{
+    if (*this < BigInt(2))
+        return false;
 
     const BigInt sieveThreshold = BigInt(BigInt::MAX_SIEVE_SIZE - 1);
 
-    if (*this <= sieveThreshold) {
+    if (*this <= sieveThreshold)
+    {
         static bool isSieveInitialized = false;
 
-        if (!isSieveInitialized) {
+        if (!isSieveInitialized)
+        {
             this->primes[0] = false;
             this->primes[1] = false;
 
-            for (int i = 2; i * i < BigInt::MAX_SIEVE_SIZE; i++) {
-                if (!this->primes[i]) {
-                    for (int j = i * i; j < BigInt::MAX_SIEVE_SIZE; j += i) {
+            for (int i = 2; i * i < BigInt::MAX_SIEVE_SIZE; i++)
+            {
+                if (!this->primes[i])
+                {
+                    for (int j = i * i; j < BigInt::MAX_SIEVE_SIZE; j += i)
+                    {
                         this->primes[j] = true;
                     }
                 }
@@ -506,13 +525,18 @@ bool BigInt::isPrime() const {
             isSieveInitialized = true;
         }
         return !this->primes[this->toInt()];
-    } else {
+    }
+    else
+    {
         BigInt n(*this);
 
-        if (n % BigInt(2) == BigInt(0)) return n == BigInt(2);
-        
-        for (BigInt testNum = BigInt(3); testNum * testNum <= n; testNum = testNum + BigInt(2)) {
-            if (n % testNum == BigInt(0)) return false;
+        if (n % BigInt(2) == BigInt(0))
+            return n == BigInt(2);
+
+        for (BigInt testNum = BigInt(3); testNum * testNum <= n; testNum = testNum + BigInt(2))
+        {
+            if (n % testNum == BigInt(0))
+                return false;
         }
 
         return true;
