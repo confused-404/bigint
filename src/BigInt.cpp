@@ -1,5 +1,129 @@
 #include "BigInt.h"
 
+std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt &other) const
+{
+    if (*this < other)
+        return std::make_pair(BigInt("0"), *this);
+    if (other == BigInt("0"))
+        throw std::runtime_error("Division by 0");
+    if (other == BigInt("1"))
+        return std::make_pair(*this, BigInt("0"));
+
+    BigInt remainder = *this;
+    BigInt quotient(this->size + 1);
+    quotient.digits = new int[this->size + 1]();
+
+    for (int i = this->size - 1; i >= other.size - 1; i--)
+    {
+        long long sigdividend = remainder.digits[i];
+        if (i + 1 < remainder.size)
+        {
+            sigdividend += static_cast<long long>(remainder.digits[i + 1]) * 1000;
+        }
+        if (i + 2 < remainder.size)
+        {
+            sigdividend += static_cast<long long>(remainder.digits[i + 2]) * 1000000;
+        }
+
+        int sigdivisor = other.digits[other.size - 1];
+        int result = sigdividend / sigdivisor;
+        BigInt bigresult(result, false);
+
+        // std::cout << "result of " << sigdividend << " / " << sigdivisor << " = " << result << std::endl;
+
+        // std::cout << "other: " << other.toString() << std::endl;
+        // std::cout << "result: " << bigresult.toString() << std::endl;
+        // std::cout << "other * result = " << (other * bigresult).toString() << std::endl;
+        BigInt shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
+        // while (shiftedDivisor > remainder)
+        // {
+        //     if (bigresult == BigInt("0"))
+        //     {
+        //         std::cout << "bigresult reached zero, breaking loop." << std::endl;
+        //         break;
+        //     }
+
+        //     // std::cout << "while shifteddivisor > reemainder iteration" << std::endl;
+        //     std::cout << "shiftedDivisor: " << shiftedDivisor.toString() << std::endl;
+        //     std::cout << "remainder: " << remainder.toString() << std::endl;
+        //     std::cout << "Before decrement: bigresult = " << bigresult.toString() << std::endl;
+        //     bigresult = bigresult - 1;
+        //     std::cout << "After decrement: bigresult = " << bigresult.toString() << std::endl;
+
+        //     shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
+        // }
+        while (shiftedDivisor > remainder)
+        {
+            // std::cout << "Before decrement: bigresult = " << bigresult.toString() << std::endl;
+
+            BigInt oldBigResult = bigresult;
+            bigresult = bigresult - 1;
+
+            // std::cout << "After decrement: bigresult = " << bigresult.toString() << std::endl;
+            if (bigresult == oldBigResult)
+            {
+                // std::cout << "bigresult is not decrementing, breaking to avoid infinite loop." << std::endl;
+                break;
+            }
+
+            shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
+            // std::cout << "Updated shiftedDivisor: " << shiftedDivisor.toString() << std::endl;
+            // std::cout << "Remainder: " << remainder.toString() << std::endl;
+
+            if (bigresult == BigInt("0"))
+            {
+                // std::cout << "bigresult reached zero, breaking loop." << std::endl;
+                break;
+            }
+        }
+
+        // std::cout << "remainder = " << remainder.toString() << " - " << shiftedDivisor.toString();
+        remainder = remainder - shiftedDivisor;
+        // std::cout << " = " << remainder.toString() << std::endl;
+
+        quotient.digits[i - (other.size - 1)] = bigresult.toInt();
+    }
+
+    quotient.removeLeadingZeroes();
+    remainder.removeLeadingZeroes();
+    return std::make_pair(quotient, remainder);
+}
+
+BigInt BigInt::shiftLeft(int places) const
+{
+    // std::cout << "shiftLeft of " << this->toString() << " with " << places << " places" << std::endl;
+    if (places <= 0)
+        return *this;
+    BigInt result(*this);
+    result.size += places;
+
+    int *newDigits = new int[result.size]();
+    for (int i = 0; i < this->size; i++)
+    {
+        newDigits[i + places] = this->digits[i];
+    }
+    delete[] result.digits;
+    result.digits = newDigits;
+    return result;
+}
+
+void BigInt::removeLeadingZeroes()
+{
+    int newSize = this->size;
+    while (newSize > 0 && this->digits[newSize - 1] == 0)
+    {
+        newSize--;
+    }
+    if (newSize != this->size)
+    {
+        int *newDigits = new int[newSize]();
+        std::copy(this->digits, this->digits + newSize, newDigits);
+        delete[] this->digits;
+        this->digits = newDigits;
+        this->size = newSize;
+    }
+}
+
 BigInt::BigInt(std::string og)
 {
     // std::cout << "Constructor with str: " << og << std::endl;
@@ -360,6 +484,41 @@ BigInt &BigInt::operator=(const BigInt &other)
     return *this;
 }
 
+bool BigInt::isPrime() const {
+    if (*this < BigInt(2)) return false;
+
+    const BigInt sieveThreshold = BigInt(BigInt::MAX_SIEVE_SIZE - 1);
+
+    if (*this <= sieveThreshold) {
+        static bool isSieveInitialized = false;
+
+        if (!isSieveInitialized) {
+            this->primes[0] = false;
+            this->primes[1] = false;
+
+            for (int i = 2; i * i < BigInt::MAX_SIEVE_SIZE; i++) {
+                if (!this->primes[i]) {
+                    for (int j = i * i; j < BigInt::MAX_SIEVE_SIZE; j += i) {
+                        this->primes[j] = true;
+                    }
+                }
+            }
+            isSieveInitialized = true;
+        }
+        return !this->primes[this->toInt()];
+    } else {
+        BigInt n(*this);
+
+        if (n % BigInt(2) == BigInt(0)) return n == BigInt(2);
+        
+        for (BigInt testNum = BigInt(3); testNum * testNum <= n; testNum = testNum + BigInt(2)) {
+            if (n % testNum == BigInt(0)) return false;
+        }
+
+        return true;
+    }
+}
+
 std::string BigInt::toString() const
 {
     if (this->size == 0)
@@ -379,113 +538,6 @@ std::string BigInt::toString() const
     return fin;
 }
 
-std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt &other) const
-{
-    if (*this < other)
-        return std::make_pair(BigInt("0"), *this);
-    if (other == BigInt("0"))
-        throw std::runtime_error("Division by 0");
-    if (other == BigInt("1"))
-        return std::make_pair(*this, BigInt("0"));
-
-    BigInt remainder = *this;
-    BigInt quotient(this->size + 1);
-    quotient.digits = new int[this->size + 1]();
-
-    for (int i = this->size - 1; i >= other.size - 1; i--)
-    {
-        long long sigdividend = remainder.digits[i];
-        if (i + 1 < remainder.size)
-        {
-            sigdividend += static_cast<long long>(remainder.digits[i + 1]) * 1000;
-        }
-        if (i + 2 < remainder.size)
-        {
-            sigdividend += static_cast<long long>(remainder.digits[i + 2]) * 1000000;
-        }
-
-        int sigdivisor = other.digits[other.size - 1];
-        int result = sigdividend / sigdivisor;
-        BigInt bigresult(result, false);
-
-        // std::cout << "result of " << sigdividend << " / " << sigdivisor << " = " << result << std::endl;
-
-        // std::cout << "other: " << other.toString() << std::endl;
-        // std::cout << "result: " << bigresult.toString() << std::endl;
-        // std::cout << "other * result = " << (other * bigresult).toString() << std::endl;
-        BigInt shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
-        // while (shiftedDivisor > remainder)
-        // {
-        //     if (bigresult == BigInt("0"))
-        //     {
-        //         std::cout << "bigresult reached zero, breaking loop." << std::endl;
-        //         break;
-        //     }
-
-        //     // std::cout << "while shifteddivisor > reemainder iteration" << std::endl;
-        //     std::cout << "shiftedDivisor: " << shiftedDivisor.toString() << std::endl;
-        //     std::cout << "remainder: " << remainder.toString() << std::endl;
-        //     std::cout << "Before decrement: bigresult = " << bigresult.toString() << std::endl;
-        //     bigresult = bigresult - 1;
-        //     std::cout << "After decrement: bigresult = " << bigresult.toString() << std::endl;
-
-        //     shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
-        // }
-        while (shiftedDivisor > remainder)
-        {
-            // std::cout << "Before decrement: bigresult = " << bigresult.toString() << std::endl;
-
-            BigInt oldBigResult = bigresult;
-            bigresult = bigresult - 1;
-
-            // std::cout << "After decrement: bigresult = " << bigresult.toString() << std::endl;
-            if (bigresult == oldBigResult)
-            {
-                // std::cout << "bigresult is not decrementing, breaking to avoid infinite loop." << std::endl;
-                break;
-            }
-
-            shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
-            // std::cout << "Updated shiftedDivisor: " << shiftedDivisor.toString() << std::endl;
-            // std::cout << "Remainder: " << remainder.toString() << std::endl;
-
-            if (bigresult == BigInt("0"))
-            {
-                // std::cout << "bigresult reached zero, breaking loop." << std::endl;
-                break;
-            }
-        }
-
-        // std::cout << "remainder = " << remainder.toString() << " - " << shiftedDivisor.toString();
-        remainder = remainder - shiftedDivisor;
-        // std::cout << " = " << remainder.toString() << std::endl;
-
-        quotient.digits[i - (other.size - 1)] = bigresult.toInt();
-    }
-
-    quotient.removeLeadingZeroes();
-    remainder.removeLeadingZeroes();
-    return std::make_pair(quotient, remainder);
-}
-
-BigInt BigInt::shiftLeft(int places) const
-{
-    // std::cout << "shiftLeft of " << this->toString() << " with " << places << " places" << std::endl;
-    if (places <= 0)
-        return *this;
-    BigInt result(*this);
-    result.size += places;
-
-    int *newDigits = new int[result.size]();
-    for (int i = 0; i < this->size; i++)
-    {
-        newDigits[i + places] = this->digits[i];
-    }
-    delete[] result.digits;
-    result.digits = newDigits;
-    return result;
-}
-
 int BigInt::toInt() const
 {
     int result = 0;
@@ -503,21 +555,4 @@ int BigInt::toInt() const
     }
 
     return this->isNegative ? -result : result;
-}
-
-void BigInt::removeLeadingZeroes()
-{
-    int newSize = this->size;
-    while (newSize > 0 && this->digits[newSize - 1] == 0)
-    {
-        newSize--;
-    }
-    if (newSize != this->size)
-    {
-        int *newDigits = new int[newSize]();
-        std::copy(this->digits, this->digits + newSize, newDigits);
-        delete[] this->digits;
-        this->digits = newDigits;
-        this->size = newSize;
-    }
 }
