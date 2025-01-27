@@ -513,22 +513,22 @@ bool BigInt::isPrime() const
 
         if (!isSieveInitialized)
         {
-            this->primes[0] = false;
-            this->primes[1] = false;
+            BigInt::primes[0] = false;
+            BigInt::primes[1] = false;
 
             for (int i = 2; i * i < BigInt::MAX_SIEVE_SIZE; i++)
             {
-                if (!this->primes[i])
+                if (!BigInt::primes[i])
                 {
                     for (int j = i * i; j < BigInt::MAX_SIEVE_SIZE; j += i)
                     {
-                        this->primes[j] = true;
+                        BigInt::primes[j] = true;
                     }
                 }
             }
             isSieveInitialized = true;
         }
-        return !this->primes[this->toInt()];
+        return !BigInt::primes[this->toInt()];
     }
     else
     {
