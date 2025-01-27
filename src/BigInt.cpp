@@ -126,7 +126,6 @@ void BigInt::removeLeadingZeroes()
 
 BigInt::BigInt(std::string og)
 {
-    // std::cout << "Constructor with str: " << og << std::endl;
     int s = og.size();
 
     if (s < 1)
@@ -135,24 +134,21 @@ BigInt::BigInt(std::string og)
     this->isNegative = og.at(0) == '-';
     this->size = (s - this->isNegative) / 3 + ((s - this->isNegative) % 3 != 0);
 
-    this->digits = new int[this->size];
+    this->digits = new int[this->size]();
 
-    // std::cout << "Starting to iteratore" << std::endl;
     int start, length;
     for (int digit = 0; digit < this->size; digit++)
     {
-        // std::cout << "iteration with digit: " << digit << std::endl;
         start = s - 3 - digit * 3;
         if (start < 0)
             start = this->isNegative;
-        length = (digit == this->size - 1) ? (s - (this->size - 1) * 3) : 3;
-        // std::cout << "before substr" << std::endl;
-        // std::cout << "start: " << start << ", length: " << length << std::endl;
-        // std::cout << "substr: " << og.substr(start, length) << " ---" << std::endl;
+        length = std::min(3, s - start); // Ensure length is valid
+
+        if (start < 0 || start >= s || length <= 0)
+            throw std::invalid_argument("Invalid start or length in string parsing");
+
         this->digits[digit] = stoi(og.substr(start, length));
-        // std::cout << "::after substr" << std::endl;
     }
-    // std::cout << "ending iteration" << std::endl;
 }
 
 BigInt::BigInt(int *digits, int size, bool isNegative)
@@ -199,7 +195,11 @@ BigInt::BigInt(int value, bool isNegative)
 
 BigInt::~BigInt()
 {
-    delete[] this->digits;
+    if (this->digits != nullptr)
+    {
+        delete[] this->digits;
+        this->digits = nullptr;
+    }
 }
 
 BigInt BigInt::copy() const
