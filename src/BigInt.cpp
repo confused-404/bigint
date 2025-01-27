@@ -493,6 +493,8 @@ BigInt BigInt::gcd(const BigInt &a, const BigInt &b)
 
 BigInt BigInt::lcm(const BigInt &a, const BigInt &b)
 {
+    if (a == BigInt("1")) return b;
+    if (b == BigInt("1")) return a;
     return a * b / BigInt::gcd(a, b);
 }
 
