@@ -13,9 +13,6 @@ private:
     int size;
     bool isNegative;
 
-    static const int MAX_SIEVE_SIZE = 1000000;
-    static bool primes[MAX_SIEVE_SIZE];
-
     std::pair<BigInt, BigInt> alldivision(const BigInt& other) const;
     BigInt shiftLeft(int places) const;
     void removeLeadingZeroes();
