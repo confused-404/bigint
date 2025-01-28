@@ -97,6 +97,11 @@ void test_division() {
     result = a / b;
     assert(result.toString() == "123456789");
 
+    a = BigInt("3217987804573");
+    b = BigInt("8979826137");
+    result = a / b;
+    assert(result.toString() == "358");
+
     a = BigInt("123456789");
     b = BigInt("0");
     try {
@@ -129,6 +134,11 @@ void test_modulus() {
     b = BigInt("1");
     result = a % b;
     assert(result.toString() == "0");
+
+    a = BigInt("3217987804573");
+    b = BigInt("8979826137");
+    result = a % b;
+    assert(result.toString() == "3210047527");
 
     a = BigInt("123456789");
     b = BigInt("0");
@@ -168,6 +178,10 @@ void test_utility_functions() {
     assert(BigInt("2").isPrime() == true);
     assert(BigInt("17").isPrime() == true);
     assert(BigInt("18").isPrime() == false);
+    // assert(BigInt("180252380737439").isPrime() == true);
+    // assert(BigInt("28871271685161").isPrime() == false);
+    assert(BigInt("50728129").isPrime() == true);
+    assert(BigInt("50728121").isPrime() == false);
 
     std::cout << "Utility functions test passed!" << std::endl;
 }

@@ -13,6 +13,7 @@ std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt& other) const {
     BigInt remainder(*this);
     BigInt quotient(*this);
     quotient.digits = new int[this->size + 1]();
+    //std::cout << "Starting alldivision. this: " << this->toString() << ", other: " << other.toString() << std::endl;
 
     for (int i = this->size - 1; i >= other.size - 1; i--) {
         long long sigdividend = remainder.digits[i];
@@ -23,17 +24,14 @@ std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt& other) const {
             sigdividend += static_cast<long long>(remainder.digits[i + 2]) * 1000000;
         }
 
-        if (other.size <= 0 || other.digits == nullptr) {
-            throw std::runtime_error("Invalid divisor: size <= 0 or digits is nullptr");
-        }
-
         int sigdivisor = other.digits[other.size - 1];
         if (sigdivisor == 0) {
-            std::cerr << "sigdividend: " << sigdividend << ", sigdivisor: " << sigdivisor << std::endl;
+            std::cerr << "Division by 0 in alldivision loop detected" << std::endl;
             throw std::runtime_error("Division by 0 detected in significant digits");
         }
 
         int result = sigdividend / sigdivisor;
+        //std::cout << "sigdividend: " << sigdividend << ", sigdivisor: " << sigdivisor << ", result: " << result << std::endl;
 
         BigInt bigresult(result);
         BigInt shiftedDivisor = (other * bigresult).shiftLeft(i - (other.size - 1));
@@ -45,13 +43,17 @@ std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt& other) const {
 
         remainder = remainder - shiftedDivisor;
         quotient.digits[i - (other.size - 1)] = bigresult.toInt();
-    }
 
+        //std::cout << "Loop iteration " << i << ": remainder = " << remainder.toString()
+        //    << ", quotient = " << quotient.toString() << std::endl;
+    }
 
     quotient.normalize();
     remainder.normalize();
+    //std::cout << "Final quotient: " << quotient.toString() << ", remainder: " << remainder.toString() << std::endl;
     return std::make_pair(quotient, remainder);
 }
+
 
 void BigInt::calculateCarry(int& n, int& carry) {
     const long DIGIT_BOUND = 0x3E8;
@@ -172,13 +174,14 @@ BigInt::BigInt(int* digitsToUse, int sizeToUse, bool isNegativeToUse) {
 }
 
 BigInt::~BigInt() {
-    if (this->size > 0 && this->digits == nullptr) {
-        throw std::runtime_error("Invalid BigInt state: size > 0 but digits == nullptr");
+    if (this->digits == nullptr && this->size > 0) {
+        throw std::runtime_error("Heap corruption: digits is nullptr but size > 0");
     }
     if (this->digits != nullptr) {
         delete[] this->digits;
         this->digits = nullptr;
     }
+    this->size = 0;
 }
 
 BigInt BigInt::operator+(const BigInt& other) const {
@@ -450,18 +453,38 @@ bool BigInt::isPrime() const {
     if (*this < BigInt(2))
         return false;
 
-    BigInt n(*this);
+    if (*this == BigInt(2))
+        return true;
+    if (*this % BigInt(2) == BigInt(0))
+        return false;
 
-    if (n % BigInt(2) == BigInt(0))
-        return n == BigInt(2);
+    BigInt low = BigInt(1);
+    BigInt high = *this;
+    BigInt mid(0), square(0);
 
-    for (BigInt testNum = BigInt(3); testNum * testNum <= n; testNum = testNum + BigInt(2))
-    {
-        if (n % testNum == BigInt(0))
-            return false;
+    while (low <= high) {
+        mid = (low + high) / BigInt(2);
+        square = mid * mid;
+
+        if (square == *this) {
+            return false; 
+        }
+        else if (square < *this) {
+            low = mid + BigInt(1);
+        }
+        else {
+            high = mid - BigInt(1);
+        }
     }
 
-    return true;
+    BigInt limit = high;
+    for (BigInt testNum(3); testNum <= limit; testNum = testNum + BigInt(2)) {
+        if (*this % testNum == BigInt(0)) {
+            return false; 
+        }
+    }
+
+    return true; 
 }
 
 std::string BigInt::toString() const {
