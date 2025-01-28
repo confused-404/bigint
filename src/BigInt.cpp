@@ -137,17 +137,16 @@ BigInt::BigInt(std::string og)
     this->digits = new int[this->size]();
 
     int start, length;
-    for (int digit = 0; digit < this->size; digit++)
+    int digitIndex = 0;
+    for (int i = s; i > this->isNegative; i -= 3)
     {
-        start = s - 3 - digit * 3;
-        if (start < 0)
-            start = this->isNegative;
-        length = std::min(3, s - start); // Ensure length is valid
+        start = std::max((int) this->isNegative, i - 3);
+        length = i - start;
 
         if (start < 0 || start >= s || length <= 0)
             throw std::invalid_argument("Invalid start or length in string parsing");
 
-        this->digits[digit] = stoi(og.substr(start, length));
+        this->digits[digitIndex++] = stoi(og.substr(start, length));
     }
 }
 
@@ -163,8 +162,15 @@ BigInt::BigInt(const BigInt &other)
 {
     this->size = other.size;
     this->isNegative = other.isNegative;
-    this->digits = new int[this->size];
-    std::copy(other.digits, other.digits + this->size, this->digits);
+    if (other.digits != nullptr)
+    {
+        this->digits = new int[this->size];
+        std::copy(other.digits, other.digits + this->size, this->digits);
+    }
+    else
+    {
+        this->digits = nullptr;
+    }
 }
 
 BigInt::BigInt(int size)
@@ -217,11 +223,14 @@ BigInt BigInt::abs() const
 
 BigInt BigInt::operator+(const BigInt &other) const
 {
-    // std::cout << "Additing" << std::endl;
+    std::cout << "Addition called" << std::endl;
+    std::cout << "this: " << this->toString() << ", other: " << other.toString() << std::endl;
+
     if (this->isNegative && other.isNegative)
     {
         BigInt result = this->abs() + other.abs();
         result.isNegative = true;
+        std::cout << "Both numbers are negative. Result: " << result.toString() << std::endl;
         return result;
     }
     if (!this->isNegative && !other.isNegative)
@@ -237,31 +246,40 @@ BigInt BigInt::operator+(const BigInt &other) const
             int sum = thisdigit + otherdigit + carry;
             newdigits[d] = sum % 1000;
             carry = sum / 1000;
+
+            std::cout << "thisdigit: " << thisdigit << ", otherdigit: " << otherdigit << ", sum: " << sum << ", carry: " << carry << std::endl;
         }
 
         if (carry > 0)
         {
             newdigits[maxSize] = carry;
+            std::cout << "Final carry: " << carry << std::endl;
         }
 
         BigInt newbigint = BigInt(newdigits, maxSize + (carry != 0), false);
-        // std::cout << "newbigint: " << newbigint.toString() << std::endl;
+        std::cout << "newbigint before removing leading zeroes: " << newbigint.toString() << std::endl;
         newbigint.removeLeadingZeroes();
+        std::cout << "newbigint after removing leading zeroes: " << newbigint.toString() << std::endl;
         return newbigint;
     }
 
     if (this->isNegative)
     {
-        return other - this->abs();
+        BigInt result = other - this->abs();
+        std::cout << "this is negative. Result: " << result.toString() << std::endl;
+        return result;
     }
     else
     {
-        return *this - other.abs();
+        BigInt result = *this - other.abs();
+        std::cout << "other is negative. Result: " << result.toString() << std::endl;
+        return result;
     }
 }
 
 BigInt BigInt::operator-(const BigInt &other) const
 {
+    std::cout << "subtraction called" << std::endl;
     if (this->isNegative && other.isNegative)
     {
         return other.abs() - this->abs();
@@ -521,22 +539,32 @@ bool BigInt::isPrime() const
     return true;
 }
 
-std::string BigInt::toString() const
-{
+std::string BigInt::toString() const {
+    std::cout << "tostring called" << std::endl;
     if (this->size == 0)
         return "0";
 
-    std::string fin = "";
+    std::string fin;
+    fin.reserve(this->size * 3 + (this->isNegative ? 1 : 0));
+
     if (this->isNegative)
         fin.append("-");
 
     fin.append(std::to_string(this->digits[this->size - 1]));
 
-    for (int d = this->size - 2; d >= 0; d--)
-    {
-        fin.append(std::string(3 - std::to_string(this->digits[d]).length(), '0'));
-        fin.append(std::to_string(this->digits[d]));
+    for (int d = this->size - 2; d >= 0; d--) {
+        std::string digitStr = std::to_string(this->digits[d]);
+        std::string paddedStr = std::string(3 - digitStr.length(), '0') + digitStr;
+
+        // Debug print statements
+        std::cout << "Digit: " << this->digits[d] << ", Padded String: " << paddedStr << std::endl;
+
+        fin.append(paddedStr);
     }
+
+    // Debug print statement
+    std::cout << "Final string: " << fin << std::endl;
+
     return fin;
 }
 
