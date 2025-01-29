@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <utility>
+#include <vector>
 #include <cmath>
 
 class BigInt {
@@ -47,6 +48,11 @@ public:
     static BigInt gcd(const BigInt& a, const BigInt& b);
     static BigInt lcm(const BigInt& a, const BigInt& b);
     bool isPrime() const;
+    static bool primesCalculated;
+    static const int STORED_PRIMES = 10000000;
+    static std::vector<char> primes;
+
+    static void initializePrimes();
 
     std::string toString() const;
     int toInt() const;

@@ -2,6 +2,33 @@
 
 #include "BigInt.h"
 
+template class std::vector<bool>;
+
+bool BigInt::primesCalculated = false;
+std::vector<char> BigInt::primes(BigInt::STORED_PRIMES, 1);
+
+void BigInt::initializePrimes() {
+    std::cout << "Initializing primes" << std::endl;
+    if (primesCalculated) return;
+    primes[0] = primes[1] = false;
+
+    int sqrtsize = std::sqrt(BigInt::STORED_PRIMES);
+
+    for (int i = 4; i < BigInt::STORED_PRIMES; i += 2) {
+        primes[i] = false;
+    }
+    for (int i = 3; i < sqrtsize; i++) {
+        if (primes[i] && (long long) i * i <= BigInt::STORED_PRIMES)
+        if (primes[i]) {
+            for (int j = i * i; j < BigInt::STORED_PRIMES; j += i) {
+                primes[j] = false;
+            }
+        }
+    }
+    primesCalculated = true;
+    std::cout << "Done initializing primes" << std::endl;
+}
+
 std::pair<BigInt, BigInt> BigInt::alldivision(const BigInt& other) const {
     if (*this < other)
         return std::make_pair(BigInt(0), *this);
@@ -178,6 +205,7 @@ BigInt::~BigInt() {
         throw std::runtime_error("Heap corruption: digits is nullptr but size > 0");
     }
     if (this->digits != nullptr) {
+        std::cout << "Deleting a BigInt with digits: " << this->digits << ", size: " << this->size << ", and address: " << this << std::endl;
         delete[] this->digits;
         this->digits = nullptr;
     }
@@ -450,41 +478,23 @@ BigInt BigInt::lcm(const BigInt& a, const BigInt& b) {
 }
 
 bool BigInt::isPrime() const {
-    if (*this < BigInt(2))
-        return false;
-
-    if (*this == BigInt(2))
-        return true;
-    if (*this % BigInt(2) == BigInt(0))
-        return false;
-
-    BigInt low = BigInt(1);
-    BigInt high = *this;
-    BigInt mid(0), square(0);
-
-    while (low <= high) {
-        mid = (low + high) / BigInt(2);
-        square = mid * mid;
-
-        if (square == *this) {
-            return false; 
-        }
-        else if (square < *this) {
-            low = mid + BigInt(1);
-        }
-        else {
-            high = mid - BigInt(1);
-        }
+    if (*this <= BigInt(BigInt::STORED_PRIMES)) {
+        BigInt::initializePrimes();
+        return BigInt::primes[this->toInt()];
     }
 
-    BigInt limit = high;
-    for (BigInt testNum(3); testNum <= limit; testNum = testNum + BigInt(2)) {
-        if (*this % testNum == BigInt(0)) {
-            return false; 
-        }
+    BigInt n(*this);
+
+    if (n % BigInt(2) == BigInt(0))
+        return n == BigInt(2);
+
+    for (BigInt testNum = BigInt(3); testNum * testNum <= n; testNum = testNum + BigInt(2))
+    {
+        if (n % testNum == BigInt(0))
+            return false;
     }
 
-    return true; 
+    return true;
 }
 
 std::string BigInt::toString() const {
